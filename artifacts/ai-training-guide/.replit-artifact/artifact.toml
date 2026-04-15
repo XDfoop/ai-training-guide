@@ -1,0 +1,31 @@
+kind = "web"
+previewPath = "/"
+title = "AI Training Guide"
+version = "1.0.0"
+id = "artifacts/ai-training-guide"
+router = "path"
+
+[[integratedSkills]]
+name = "react-vite"
+version = "1.0.0"
+
+[[services]]
+name = "web"
+paths = [ "/" ]
+localPort = 22584
+
+[services.development]
+run = "pnpm --filter @workspace/ai-training-guide run dev"
+
+[services.production]
+build = [ "pnpm", "--filter", "@workspace/ai-training-guide", "run", "build" ]
+publicDir = "artifacts/ai-training-guide/dist/public"
+serve = "static"
+
+[[services.production.rewrites]]
+from = "/*"
+to = "/index.html"
+
+[services.env]
+PORT = "22584"
+BASE_PATH = "/"

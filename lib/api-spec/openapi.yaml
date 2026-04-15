@@ -1,0 +1,537 @@
+openapi: 3.1.0
+info:
+  # Do not change the title, if the title changes, the import paths will be broken
+  title: Api
+  version: 0.1.0
+  description: API specification for AI Training Guide
+servers:
+  - url: /api
+    description: Base API path
+tags:
+  - name: health
+    description: Health operations
+  - name: topics
+    description: AI training topic categories
+  - name: articles
+    description: AI training articles and guides
+  - name: training
+    description: Training paths and model types
+  - name: datasets
+    description: Open datasets for training
+paths:
+  /healthz:
+    get:
+      operationId: healthCheck
+      tags: [health]
+      summary: Health check
+      responses:
+        "200":
+          description: Healthy
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/HealthStatus"
+
+  /topics:
+    get:
+      operationId: listTopics
+      tags: [topics]
+      summary: List all AI training topics
+      responses:
+        "200":
+          description: List of topics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Topic"
+
+  /topics/{id}:
+    get:
+      operationId: getTopic
+      tags: [topics]
+      summary: Get a topic with its articles
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Topic with articles
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TopicWithArticles"
+        "404":
+          description: Topic not found
+
+  /articles:
+    get:
+      operationId: listArticles
+      tags: [articles]
+      summary: List all articles
+      parameters:
+        - name: topicId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: difficulty
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+      responses:
+        "200":
+          description: List of articles
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Article"
+
+  /articles/{id}:
+    get:
+      operationId: getArticle
+      tags: [articles]
+      summary: Get a single article
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Article
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Article"
+        "404":
+          description: Not found
+
+  /articles/summary:
+    get:
+      operationId: getArticlesSummary
+      tags: [articles]
+      summary: Get summary stats
+      responses:
+        "200":
+          description: Summary stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/ArticlesSummary"
+
+  /topics/featured:
+    get:
+      operationId: getFeaturedTopics
+      tags: [topics]
+      summary: Get featured topics with top articles
+      responses:
+        "200":
+          description: Featured topics
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TopicWithArticles"
+
+  /training/model-types:
+    get:
+      operationId: listModelTypes
+      tags: [training]
+      summary: List all model types (language, vision, voice, image-gen, video-gen, agent)
+      responses:
+        "200":
+          description: List of model types
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/ModelType"
+
+  /training/paths:
+    get:
+      operationId: listTrainingPaths
+      tags: [training]
+      summary: List all training paths
+      parameters:
+        - name: modelTypeId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: difficulty
+          in: query
+          required: false
+          schema:
+            type: string
+            enum: [beginner, intermediate, advanced]
+      responses:
+        "200":
+          description: List of training paths
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/TrainingPath"
+
+  /training/paths/{id}:
+    get:
+      operationId: getTrainingPath
+      tags: [training]
+      summary: Get a training path with all its steps
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Training path with steps
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrainingPathWithSteps"
+        "404":
+          description: Not found
+
+  /training/summary:
+    get:
+      operationId: getTrainingSummary
+      tags: [training]
+      summary: Get overview stats for the training lab
+      responses:
+        "200":
+          description: Training summary stats
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/TrainingSummary"
+
+  /datasets:
+    get:
+      operationId: listDatasets
+      tags: [datasets]
+      summary: List available open datasets
+      parameters:
+        - name: modelTypeId
+          in: query
+          required: false
+          schema:
+            type: integer
+        - name: category
+          in: query
+          required: false
+          schema:
+            type: string
+      responses:
+        "200":
+          description: List of datasets
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: "#/components/schemas/Dataset"
+
+components:
+  schemas:
+    HealthStatus:
+      type: object
+      properties:
+        status:
+          type: string
+      required: [status]
+
+    Topic:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        articleCount:
+          type: integer
+        color:
+          type: string
+      required: [id, name, slug, description, icon, articleCount, color]
+
+    TopicWithArticles:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        articles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Article"
+      required: [id, name, slug, description, icon, color, articles]
+
+    Article:
+      type: object
+      properties:
+        id:
+          type: integer
+        topicId:
+          type: integer
+        topicName:
+          type: string
+        title:
+          type: string
+        slug:
+          type: string
+        summary:
+          type: string
+        content:
+          type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        readingTimeMinutes:
+          type: integer
+        tags:
+          type: array
+          items:
+            type: string
+        createdAt:
+          type: string
+      required: [id, topicId, topicName, title, slug, summary, content, difficulty, readingTimeMinutes, tags, createdAt]
+
+    ArticlesSummary:
+      type: object
+      properties:
+        totalArticles:
+          type: integer
+        totalTopics:
+          type: integer
+        byDifficulty:
+          type: object
+          properties:
+            beginner:
+              type: integer
+            intermediate:
+              type: integer
+            advanced:
+              type: integer
+          required: [beginner, intermediate, advanced]
+        byTopic:
+          type: array
+          items:
+            type: object
+            properties:
+              topicName:
+                type: string
+              count:
+                type: integer
+            required: [topicName, count]
+        featuredArticles:
+          type: array
+          items:
+            $ref: "#/components/schemas/Article"
+      required: [totalArticles, totalTopics, byDifficulty, byTopic, featuredArticles]
+
+    ModelType:
+      type: object
+      properties:
+        id:
+          type: integer
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        icon:
+          type: string
+        color:
+          type: string
+        gpuVramMin:
+          type: integer
+        gpuVramRecommended:
+          type: integer
+        examples:
+          type: array
+          items:
+            type: string
+        useCases:
+          type: array
+          items:
+            type: string
+        pathCount:
+          type: integer
+        datasetCount:
+          type: integer
+      required: [id, name, slug, description, icon, color, gpuVramMin, gpuVramRecommended, examples, useCases, pathCount, datasetCount]
+
+    TrainingPath:
+      type: object
+      properties:
+        id:
+          type: integer
+        modelTypeId:
+          type: integer
+        modelTypeName:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        totalSteps:
+          type: integer
+        estimatedHours:
+          type: integer
+        gpuVramRequired:
+          type: integer
+        canStack:
+          type: boolean
+        stackNote:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+      required: [id, modelTypeId, modelTypeName, name, slug, description, difficulty, totalSteps, estimatedHours, gpuVramRequired, canStack, stackNote, tags]
+
+    TrainingStep:
+      type: object
+      properties:
+        id:
+          type: integer
+        pathId:
+          type: integer
+        stepOrder:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        codeSnippet:
+          type: string
+        resources:
+          type: array
+          items:
+            type: string
+        tips:
+          type: string
+      required: [id, pathId, stepOrder, title, description, codeSnippet, resources, tips]
+
+    TrainingPathWithSteps:
+      type: object
+      properties:
+        id:
+          type: integer
+        modelTypeId:
+          type: integer
+        modelTypeName:
+          type: string
+        name:
+          type: string
+        slug:
+          type: string
+        description:
+          type: string
+        difficulty:
+          type: string
+          enum: [beginner, intermediate, advanced]
+        totalSteps:
+          type: integer
+        estimatedHours:
+          type: integer
+        gpuVramRequired:
+          type: integer
+        canStack:
+          type: boolean
+        stackNote:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        steps:
+          type: array
+          items:
+            $ref: "#/components/schemas/TrainingStep"
+      required: [id, modelTypeId, modelTypeName, name, slug, description, difficulty, totalSteps, estimatedHours, gpuVramRequired, canStack, stackNote, tags, steps]
+
+    TrainingSummary:
+      type: object
+      properties:
+        totalModelTypes:
+          type: integer
+        totalPaths:
+          type: integer
+        totalDatasets:
+          type: integer
+        totalSteps:
+          type: integer
+        modelTypes:
+          type: array
+          items:
+            $ref: "#/components/schemas/ModelType"
+      required: [totalModelTypes, totalPaths, totalDatasets, totalSteps, modelTypes]
+
+    Dataset:
+      type: object
+      properties:
+        id:
+          type: integer
+        modelTypeId:
+          type: integer
+        modelTypeName:
+          type: string
+        name:
+          type: string
+        description:
+          type: string
+        url:
+          type: string
+        sourceUrl:
+          type: string
+        sizeGb:
+          type: number
+        format:
+          type: string
+        license:
+          type: string
+        category:
+          type: string
+        tags:
+          type: array
+          items:
+            type: string
+        recordCount:
+          type: string
+      required: [id, modelTypeId, modelTypeName, name, description, url, sourceUrl, sizeGb, format, license, category, tags, recordCount]
